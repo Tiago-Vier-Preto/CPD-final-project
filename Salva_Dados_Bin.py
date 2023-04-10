@@ -8,6 +8,14 @@ arquivo_csv = csv.reader(arquivo, delimiter=";")
 j = 0
 for linha in arquivo_csv:
     if (j != 0):
+        notas = [linha[31], linha[32], linha[33], linha[34], linha[50]]
+        i = 0
+        while i < len(notas):
+            if notas[i] == " " or notas[i] == "":
+                notas[i] = 0
+            else:
+                notas[i] = float(notas[i])
+                i += 1
         dict = {
             "inscricao": linha[0],
             "idade": linha[2],
@@ -17,11 +25,11 @@ for linha in arquivo_csv:
             "Treineiro": linha[11],
             "Municipio": linha[20],
             "estado": linha[22],
-            "NotaCN": linha[31],
-            "NotaCH": linha[32],
-            "NotaLC": linha[33],
-            "NotaMT": linha[34],
-            "NotaRedacao": linha[50]
+            "NotaCN": notas[0],
+            "NotaCH": notas[1],
+            "NotaLC": notas[2],
+            "NotaMT": notas[3],
+            "NotaRedacao": notas[4]
         }
         aluno = Aluno(dict)
         

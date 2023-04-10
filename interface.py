@@ -2,6 +2,7 @@ from src.bplustree import bplus_tree
 import pickle
 import os
 import math
+
 def calcula_media(notas):
     soma = 0
     for nota in notas:
@@ -27,14 +28,6 @@ def ordena_por_nota(inicio, forma):
             offset = arq.tell()
             obj = pickle.load(arq)
             notas = [obj.dict["NotaCN"], obj.dict["NotaCH"], obj.dict["NotaCN"], obj.dict["NotaLC"], obj.dict["NotaCN"], obj.dict["NotaRedacao"]]
-            i = 0
-            while i < len(notas):
-                if notas[i] == " " or notas[i] == "":
-                    notas[i] = 0
-                else:
-                    notas[i] = float(notas[i])
-                i += 1
-
             media = calcula_media(notas)
             media = round(media, 2)
             tupla = (offset, media)
@@ -88,53 +81,90 @@ def ordena_por_estado():
     arq.close()
     return dicionario_estados
 
+def ordena_por_genero(genero):
+    arq = open("database.bin", "rb")
+    lista_offset = []
+    j = 0
+    while True:
+        try:
+            offset = arq.tell()
+            obj = pickle.load(arq)
+            sexo = obj.dict["Sexo"]
+            if sexo == genero:
+                lista_offset.append(offset)
+            j += 1
+        except(EOFError):
+            break
+
+    arq.close()
+    return lista_offset
+
+    
+
 def salva_arquivo_invertido(path, dicionario):
     arq = open(path, "wb")
     pickle.dump(dicionario, arq)
 
-def imprime_em_paginas(lista, num_elementos):
+def imprime_em_paginas(lista, num_elementos, arq):
     num_paginas = math.ceil(len(lista) / num_elementos)
-    pag_atual = 0
+    pag_atual = 1
     ultimo = 0
     fim = False
     while fim == False:
-        print(f'Exibindo {num_elementos} elementos. Página {pag_atual+1}/{num_paginas}')
+        print(f'\nExibindo {num_elementos} elementos. Página {pag_atual}/{num_paginas}\n')
         j = ultimo
         while j < num_elementos + ultimo:
-            offset = lista[j]
+            try:
+                offset = lista[j]
+            except(IndexError):
+                break
             arq.seek(offset)
             obj = pickle.load(arq)
             print(obj)
             print("\n")
             j += 1
-        if pag_atual != 0:   
-            prox = input("Proxima Pagina (P) - Pagina Anterior (A) - Sair (S)")
-        else:
-            prox = input("Proxima Pagina (P) - Sair (S)")
+          
+        prox = input("Proxima Pagina (P) - Pagina Anterior (A) - Inserior Página (I) - Sair (S)")
         prox = prox.upper()
         if (prox == "S"):
             fim = True
         elif prox == "P":
-            pag_atual += 1
-            ultimo = j
+            if (pag_atual < num_paginas):
+                pag_atual += 1
+                ultimo = j
+            else:
+                ultimo = (num_paginas - 1) * num_elementos
             os.system('cls' if os.name == 'nt' else 'clear')
-        elif prox == "A" and pag_atual != 0:
-            pag_atual -= 1
-            ultimo = j - 2*num_elementos
+        elif prox == "A":
+            if (pag_atual != 1):
+                pag_atual -= 1
+                ultimo = j - 2*num_elementos
+            else:
+                pag_atual = 1
+                ultimo = 0
             os.system('cls' if os.name == 'nt' else 'clear')
 
-
+        elif prox == "I":
+            pag_desejada = int(input("Insira a Página:"))
+            if (pag_desejada < 1):
+                pag_desejada = 1
+            if pag_desejada > num_paginas:
+                pag_desejada = num_paginas
+            ultimo = j + (pag_desejada - pag_atual - 1) * num_elementos
+            pag_atual = pag_desejada
+            os.system('cls' if os.name == 'nt' else 'clear')
 
 arvore = bplus_tree()
-print("\n********** Bem vindo ao Banco de Dados do ENEM 2021/2 **********\n")
+print("\n********** Bem vindo ao Banco de Dados do ENEM 2021 **********\n")
 arvore = arvore.open("./")
 sair = False
 
 while sair == False:
     print("1 - Consultar Informações")
     print("2 - Ordenar por Nota")
-    print("3 - Ordenar por Municipio")
-    print("4 - Ordenar por Estado")
+    print("3 - Mostrar as provas feitas em um Municipio")
+    print("4 - Mostrar as provas feitas em um Estado")
+    print("5 - Mostrar as provas feitas por um determinado gênero")
     print("0 - Sair")
     opcode = int(input("Escolha uma Opção:"))
 
@@ -161,37 +191,56 @@ while sair == False:
         forma = forma.upper()
         
         arq = open("database.bin", "rb")
+
         lista_ordenada = ordena_por_nota(0, forma)
 
-        num_elementos = 10
+        num_elementos = 4
         num_paginas = math.ceil(len(lista_ordenada) / num_elementos)
-        pag_atual = 0
+        pag_atual = 1
         ultimo = 0
         fim = False
         while fim == False:
-            print(f'Exibindo {num_elementos} elementos. Página {pag_atual+1}/{num_paginas}')
+            print(f'\nExibindo {num_elementos} elementos. Página {pag_atual}/{num_paginas}\n')
             j = ultimo
             while j < num_elementos + ultimo:
-                offset = lista_ordenada[j][0]
+                try:
+                    offset = lista_ordenada[j][0]
+                except(IndexError):
+                    break
                 arq.seek(offset)
                 obj = pickle.load(arq)
                 print(obj)
+                print(f'Nota Média:{lista_ordenada[j][1]}')
                 print("\n")
                 j += 1
-            if pag_atual != 0:   
-                prox = input("Proxima Pagina (P) - Pagina Anterior (A) - Sair (S)")
-            else:
-                prox = input("Proxima Pagina (P) - Sair (S)")
+            prox = input("Proxima Pagina (P) - Pagina Anterior (A) - Inserior Página (I) - Sair (S)")
             prox = prox.upper()
             if (prox == "S"):
                 fim = True
             elif prox == "P":
-                pag_atual += 1
-                ultimo = j
+                if (pag_atual < num_paginas):
+                    pag_atual += 1
+                    ultimo = j
+                else:
+                    ultimo = (num_paginas - 1) * num_elementos
                 os.system('cls' if os.name == 'nt' else 'clear')
-            elif prox == "A" and pag_atual != 0:
-                pag_atual -= 1
-                ultimo = j - 2*num_elementos
+            elif prox == "A":
+                if (pag_atual != 1):
+                    pag_atual -= 1
+                    ultimo = j - 2*num_elementos
+                else:
+                    pag_atual = 1
+                    ultimo = 0
+                os.system('cls' if os.name == 'nt' else 'clear')
+
+            elif prox == "I":
+                pag_desejada = int(input("Insira a Página:"))
+                if (pag_desejada < 1):
+                    pag_desejada = 1
+                if pag_desejada > num_paginas:
+                    pag_desejada = num_paginas
+                ultimo = j + (pag_desejada - pag_atual - 1) * num_elementos
+                pag_atual = pag_desejada
                 os.system('cls' if os.name == 'nt' else 'clear')
     elif opcode == 3:
         arq = open("database.bin", "rb")
@@ -207,7 +256,7 @@ while sair == False:
             print(f'Municipio {municipio} não encontrado!')
         else:
             lista_offset = dicionario_municipios[municipio]
-            imprime_em_paginas(lista_offset, 10)  
+            imprime_em_paginas(lista_offset, 4, arq)  
     elif opcode == 4:
         arq = open("database.bin", "rb")
         try:
@@ -218,11 +267,24 @@ while sair == False:
             salva_arquivo_invertido("ArquivoEstado.bin", dicionario_estados)
 
         estado = input("Insira o estado:")
+        estado = estado.upper()
         if estado not in dicionario_estados:
             print(f'Estado {estado} não encontrado!')
         else:
             lista_offset = dicionario_estados[estado]
-            imprime_em_paginas(lista_offset, 10)
-
+            imprime_em_paginas(lista_offset, 4, arq)
+    elif opcode == 5:
+        genero = input("Masculino (M) ou Feminino (F):")
+        genero = genero.upper()
+        if genero != "M" and genero != "F":
+            print("Gênero não encontrado!")
+        else:
+            if genero == "M":
+                genero = "Masculino"
+            elif genero == "F":
+                genero = "Feminino"
+            arq = open("database.bin", "rb")
+            lista_offset_genero = ordena_por_genero(genero)
+            imprime_em_paginas(lista_offset_genero, 4, arq)
     elif opcode == 0:
         sair = True

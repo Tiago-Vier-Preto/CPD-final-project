@@ -133,3 +133,4 @@ class Aluno:
 
     def __str__(self):
         return f'Inscricao:{self.dict["inscricao"]}\nIdade:{self.dict["idade"]}\nSexo:{self.dict["Sexo"]}\nCor:{self.dict["Cor"]}\nNacionalidade:{self.dict["Nacionalidade"]}\nTreineiro:{self.dict["Treineiro"]}\nHumanas:{self.dict["NotaCN"]}\nNaturezas:{self.dict["NotaCH"]}\nLinguagens:{self.dict["NotaLC"]}\nMatematica:{self.dict["NotaMT"]}\nRedacao:{self.dict["NotaRedacao"]}'
+
